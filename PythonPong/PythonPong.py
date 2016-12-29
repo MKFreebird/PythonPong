@@ -1,6 +1,5 @@
 from tkinter import *
 import random
-import time
 
 #deze gebruiken voor hindernissen
 #        if self.collissionObject.count(3) > 0 or self.collissionObject.count(4) > 0:
@@ -10,10 +9,9 @@ import time
 #   TODO
 #   
 #   - bounce uiteinden spelers
-#   - score
 #   - reset game 
 #   - user input
-#
+#   - label position on foreground?
 #   * bot begint op eigen helft
 #
 
@@ -40,45 +38,49 @@ class Ball:
         self.position = canvas.coords(self.ball)
         self.collissionObject = canvas.find_overlapping(*self.position)
      #   print("Bounce player :", canvas.find_overlapping(*self.position))
-
-        if self.collissionObject.count(3) > 0 or self.collissionObject.count(2) > 0:
-            self.playerPosition = canvas.coords(playerOne.player)    
-            self.playerOneTop = canvas.find_closest(self.playerPosition[0], self.playerPosition[1])
-            self.playerOneBottom = canvas.find_closest(self.playerPosition[2], self.playerPosition[3])
-            
-            if self.playerOneTop.count(6) > 0 or self.playerOneBottom.count(6) > 0:
-                self.ballDirection[1] *= -1 # balldirection + playerdirection +1
-            else:
-                print("Bounce player :", canvas.find_overlapping(*self.position))
-                self.ballDirection[0] *= -1 
-        if self.position[0] <= 0 or self.position[2] >= self.canvasWidth+2:     # links rechts
+        if self.collissionObject.count(3) > 0 or self.collissionObject.count(5) > 0:          
             self.ballDirection[0] *= -1 
-            print("Bounce X-as   :", self.position)
+        #    print("Bounce player :", canvas.find_overlapping(*self.position))
+        if self.position[0] <= 0:
+            playerTwo.score += 1
+            playerTwo.scoreStringVar.set(str(playerTwo.score))
+            self.ballDirection[0] *= -1 
+        if self.position[2] >= self.canvasWidth+2:     
+            playerOne.score += 1
+            playerOne.scoreStringVar.set(str(playerOne.score))
+            self.ballDirection[0] *= -1 
+       #     print("Bounce X-as   :", self.position)
         if self.position[1] <= 0 or self.position[3] >= self.canvasHeight+2:    # boven onder
-            print("Bounce Y-as   :", self.position)
+       #     print("Bounce Y-as   :", self.position)
             self.ballDirection[1] *= -1   
 
     def moveBall(self):
         canvas.move(self.ball, self.ballDirection[0], self.ballDirection[1]) 
-      
 
 
 class Player:
-    
+
     def __init__(self, canvas, width, height, player):
         self.playerHeight = height/5
         self.playerWidth = 5
         self.canvasWidth = width
         self.canvasHeight = height
         self.playerDistance = 50
+        self.score = 0
+        self.scoreStringVar = StringVar()
+        self.scoreStringVar.set(str(self.score))
+        self.scoreLabel = Label(canvas, textvariable=self.scoreStringVar, bg="black", fg="grey", font=('Verdana', 18, 'bold'))
+        self.scoreLabel.pack()
         if player == 1:
             self.x0 = self.playerDistance
             self.x1 = self.playerDistance 
             self.playerDirectionAI = -2
+            canvas.create_window(canvasWidth/2 - canvasWidth/10, canvasHeight/10, window=self.scoreLabel)
         else:
             self.x0 = self.canvasWidth - self.playerDistance
             self.x1 = self.canvasWidth - self.playerDistance
             self.playerDirectionAI = 2
+            canvas.create_window(canvasWidth/2 + canvasWidth/10, canvasHeight/10, window=self.scoreLabel)
         self.y0 = (self.canvasHeight/2) - (self.playerHeight/2)
         self.y1 = self.y0 + self.playerHeight
         self.player = canvas.create_line(self.x0, self.y0, self.x1, self.y1, fill="white", width=self.playerWidth)
@@ -96,8 +98,8 @@ class Player:
  
 
 if __name__ == "__main__":
-    canvasWidth = 300
-    canvasHeight = 300
+    canvasWidth = 600
+    canvasHeight = 400
 
     root = Tk()
     root.geometry(str(canvasWidth) + "x" + str(canvasHeight) + "+400+200")
@@ -107,22 +109,14 @@ if __name__ == "__main__":
 
     canvas = Canvas(root, width=canvasWidth, height=canvasHeight, bg="black")
     canvas.pack()
+
     middleLine = canvas.create_line(canvasWidth/2, 0, canvasWidth/2, canvasHeight, fill="grey", dash=(250, 5))
- #   ball = Ball(canvas, canvasWidth, canvasHeight)
+
     playerOne = Player(canvas, canvasWidth, canvasHeight, 1)
     playerTwo = Player(canvas, canvasWidth, canvasHeight, 2)
-    scorePlayerOne = Label(canvas, text="0", bg="black", fg="grey", font=('Times', 20, 'bold'))
-    scorePlayerOne.pack()
-    canvas.create_window(canvasWidth/2 - canvasWidth/10, canvasHeight/10, window=scorePlayerOne)
-
-    scorePlayerTwo = Label(canvas, text="0", bg="black", fg="grey", font=('Times', 20, 'bold'))
-    scorePlayerTwo.pack()
-    canvas.create_window(canvasWidth/2 + canvasWidth/10, canvasHeight/10, window=scorePlayerTwo)
 
     ball = Ball(canvas, canvasWidth, canvasHeight)
-
-    print(canvas.find_all())
-  
+ 
     while True:
         ball.moveBall() 
         ball.checkCollision()
@@ -130,6 +124,5 @@ if __name__ == "__main__":
         playerTwo.bot()
         root.update()
         root.after(10)
-      #  time.sleep(0.001)
     
     root.mainloop()
